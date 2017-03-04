@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
         //check if network is available
         if (isNetworkAvailable() == true) {
             //show dialog to get stock info
-            
+
             //Download stock details
             new DownloadStocks(this).execute();
         }
