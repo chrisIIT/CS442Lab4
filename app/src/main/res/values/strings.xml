@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Stocker</string>
+
+    <!--JSONObject-->
+    <string name="ticker">Ticker</string>
+    <string name="name">Name</string>
+    <string name="lastTradePrice">Last Trade Price</string>
+    <string name="direction">Direction</string>
+    <string name="changeAmount">Change Amount</string>
+    <string name="changePercentage">Change Percentage</string>
+
+    <!--Menu-->
+    <string name="menu_title">Add A Stock</string>
+
+
+    <!--Internet Dialog Error-->
+    <string name="IDE_title">No Network Connection</string>
+    <string name="IDE_text">Stocks cannot be updated without a network connection.</string>
+</resources>
