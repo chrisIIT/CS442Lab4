@@ -17,6 +17,14 @@ public class Stock {
     double changeAmount;
     double changePercentage;
 
+    public Stock(String ticker, String name, double lastTradePrice, boolean direction, double changeAmount, double changePercentage) {
+        this.ticker = ticker;
+        this.name = name;
+        this.lastTradePrice = lastTradePrice;
+        this.changeAmount = changeAmount;
+        this.changePercentage = changePercentage;
+    }
+
     public String getTicker() {
         return ticker;
     }

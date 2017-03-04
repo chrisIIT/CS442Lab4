@@ -12,8 +12,14 @@
     <!--Menu-->
     <string name="menu_title">Add A Stock</string>
 
+    <!--Dialog General-->
+    <string name="cancel">Cancel</string>
 
     <!--Internet Dialog Error-->
     <string name="IDE_title">No Network Connection</string>
     <string name="IDE_text">Stocks cannot be updated without a network connection.</string>
+
+    <!--Search Stock Dialog-->
+    <string name="SSD_title">Search For A Stock</string>
+    <string name="find">Search</string>
 </resources>
