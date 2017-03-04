@@ -2,6 +2,8 @@ package com.example.chris.stocker;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -11,6 +13,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.EditText;
 
 import java.util.ArrayList;
 
@@ -22,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //set background color
+        //getWindow().getDecorView().setBackgroundColor(Color.BLACK);
     }
 
     @Override
@@ -43,9 +48,30 @@ public class MainActivity extends AppCompatActivity {
         //check if network is available
         if (isNetworkAvailable() == true) {
             //show dialog to get stock info
-            
-            //Download stock details
-            new DownloadStocks(this).execute();
+           final EditText search = new EditText(this);
+            search.setId(R.id.search);
+            new AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.SSD_title))
+                    .setView(search)
+                    .setPositiveButton(getString(R.string.find), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            System.out.println("Search Text is "+search.getText());
+                            //should be where it goes to download stock
+                            //or parses string and then searches
+                            /*TODO
+                            * Check for dupplicate*/
+                            //Download stock details
+                            //new DownloadStocks(this).execute();
+                        }
+                    })
+                    .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            System.out.println("Cancel clicked");
+                        }
+                    })
+                    .show();
         }
         else {
             new AlertDialog.Builder(this)
