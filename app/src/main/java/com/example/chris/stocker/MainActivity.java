@@ -29,16 +29,19 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity {
     ArrayList<Stock> stockList = new ArrayList<>();
-    DownloadStocks DS;
-
+    //ArrayList<JSONObject> stockList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        DownloadStocks DS = new DownloadStocks(this);
+        DownloadStockData DSD = new DownloadStockData(this);
 
         //set background color
         //getWindow().getDecorView().setBackgroundColor(Color.BLACK);
@@ -71,7 +74,53 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void addStockToList(JSONObject j) {
-
+        //show alert for duplicate object
+        if (checkDuplicateFound(j) == true ) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Stock Already Added")
+                    .setMessage("This stock is already added to the list.")
+                    .show();
+        } else {
+            //remap object to stock object
+            String ticker, name, changeAmount, changePercentage, lastTradePrice;
+            ticker = name = changeAmount = changePercentage = lastTradePrice = null;
+            boolean direction = false;
+            try {
+                ticker = j.getString("t");
+                name = j.getString("stockName");
+                lastTradePrice = j.getString("l");
+                changeAmount = j.getString("c");
+                changePercentage = j.getString("cp");
+                if  (lastTradePrice.substring(0,1) == "+") {
+                    direction = true; //true == "+"
+                } else {
+                    direction = false; //false == "-"
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            //add stock to list
+            Stock sto = new Stock(ticker,name,lastTradePrice,direction,changeAmount,changePercentage);
+            stockList.add(sto);
+            //sort stockList
+            Collections.sort(stockList, new Comparator<Stock>() {
+                @Override
+                public int compare(Stock o1, Stock o2) {
+                    return o1.getName().compareTo(o2.getName());
+                }
+            });
+            System.out.println("Sorted stockList is: ");
+            for (Stock s : stockList) {
+                System.out.println(s.toString());
+            }
+        }
+    }
+    public boolean checkDuplicateFound(JSONObject j) {
+        if (stockList.contains(j)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public void retrieveStock(){
@@ -111,20 +160,17 @@ public class MainActivity extends AppCompatActivity {
                     .show();
         }
     }
-//    public boolean checkDuplicates(ArrayList<>) {
-//
-//    }
 }
 
 
 class DownloadStocks extends AsyncTask<String, Void, String> {
-    Activity activity;
+    MainActivity activity;
     Context context;
     final String APIKey = "94e3a83d4a1c7c5159661a5834bad8d8b306e054";
     ProgressDialog pd;
     int statusCode;
 
-    public DownloadStocks(Activity activity) {
+    public DownloadStocks(MainActivity activity) {
         this.activity = activity;
         this.context = activity.getApplicationContext();
     }
@@ -158,7 +204,7 @@ class DownloadStocks extends AsyncTask<String, Void, String> {
 
                 while ((line = reader.readLine()) != null) {
                     buffer.append(line+'\n');
-                    System.out.println("Response: "+line);
+                    System.out.println("DownloadStocks Response: "+line);
                 }
                 return buffer.toString();
             } else {
@@ -214,19 +260,18 @@ class DownloadStocks extends AsyncTask<String, Void, String> {
                     .show();
         }
         else { //stocks found
-            System.out.println("Stocks are "+stocks);
             JSONArray JA = null;
             try {
                 JA = new JSONArray(stocks);
                 if (JA.length() == 1) { //only one stock found
-                    System.out.println("One stock found");
-                    System.out.println("number of stocks are "+JA.length());
-                    MainActivity ma = new MainActivity();
+                    //System.out.println("One stock found");
+                    //System.out.println("number of stocks are "+JA.length());
+                   // MainActivity ma = new MainActivity();
                     JSONObject j = (JSONObject)JA.get(0);
-                    ma.processNewStock(j.getString("company_symbol"), j.getString("company_name")); //pass symbol string and company nameto processNewStock
+                    activity.processNewStock(j.getString("company_symbol"), j.getString("company_name")); //pass symbol string and company nameto processNewStock
                 } else { //more than one stock found
-                    System.out.println("More than one stock found");
-                    System.out.println("number of stocks are "+JA.length());
+                    //System.out.println("More than one stock found");
+                    //System.out.println("number of stocks are "+JA.length());
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -236,12 +281,12 @@ class DownloadStocks extends AsyncTask<String, Void, String> {
 }
 
 class DownloadStockData extends AsyncTask <String, Void, String> {
-    Activity activity;
+    MainActivity activity;
     Context context;
     int statusCode;
     String stockName;
 
-    public DownloadStockData(Activity activity) {
+    public DownloadStockData(MainActivity activity) {
         this.activity = activity;
         this.context = activity.getApplicationContext();
     }
@@ -268,9 +313,9 @@ class DownloadStockData extends AsyncTask <String, Void, String> {
                 StringBuffer buffer = new StringBuffer();
                 String line = "";
 
-                while ((line = reader.readLine()) != null)) {
+                while ((line = reader.readLine()) != null) {
                     buffer.append(line + "\n");
-                    System.out.println("Response is: " + line);
+                    System.out.println("DownloadStockData Response is: " + line);
                 }
                 stockName = params[1];
                 System.out.println("Stock Name is: "+stockName);
@@ -302,19 +347,21 @@ class DownloadStockData extends AsyncTask <String, Void, String> {
         super.onPostExecute(s);
         if (statusCode == HttpURLConnection.HTTP_OK) {
             //response retrieved successfully
-            String t = s.substring(2); //remove // from the string
+            System.out.println("inPostExecute DownloadStockData");
+            String t = s.substring(4); //remove // from the string
             try {
                 JSONArray JA = new JSONArray(t);
                 JSONObject j = (JSONObject)JA.get(0);
                 JSONObject newJ = new JSONObject();
-                newJ.put("stockName", stockName);
-                newJ.put("t",j.getString("t"));
-                newJ.put("l",j.getString("t"));
-                newJ.put("c",j.getString("c"));
-                newJ.put("cp",j.getString("cp"));
+                //add elements to the new object
+                newJ.put("stockName", stockName); //company name
+                newJ.put("t",j.getString("t")); //ticker
+                newJ.put("l",j.getString("l")); //last trade price
+                newJ.put("c",j.getString("c")); //price change amount
+                newJ.put("cp",j.getString("cp")); //price change percentage
 
-                MainActivity ma = new MainActivity();
-                ma.addStockToList(newJ); //pass object to the stocklist
+                //MainActivity ma = new MainActivity();
+                activity.addStockToList(newJ); //pass object to the stocklist
             } catch (JSONException e) {
                 e.printStackTrace();
             }

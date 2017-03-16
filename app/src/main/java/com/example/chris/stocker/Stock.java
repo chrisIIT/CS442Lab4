@@ -12,12 +12,12 @@ import org.json.JSONObject;
 public class Stock {
     String ticker;
     String name;
-    double lastTradePrice;
+    String lastTradePrice;
     boolean direction;
-    double changeAmount;
-    double changePercentage;
+    String changeAmount;
+    String changePercentage;
 
-    public Stock(String ticker, String name, double lastTradePrice, boolean direction, double changeAmount, double changePercentage) {
+    public Stock(String ticker, String name, String lastTradePrice, boolean direction, String changeAmount, String changePercentage) {
         this.ticker = ticker;
         this.name = name;
         this.lastTradePrice = lastTradePrice;
@@ -41,15 +41,15 @@ public class Stock {
         this.name = name;
     }
 
-    public double getLastTradePrice() {
+    public String getLastTradePrice() {
         return lastTradePrice;
     }
 
-    public void setLastTradePrice(double lastTradePrice) {
+    public void setLastTradePrice(String lastTradePrice) {
         this.lastTradePrice = lastTradePrice;
     }
 
-    public boolean isDirection() {
+    public boolean getDirection() {
         return direction;
     }
 
@@ -57,23 +57,28 @@ public class Stock {
         this.direction = direction;
     }
 
-    public double getChangeAmount() {
+    public String getChangeAmount() {
         return changeAmount;
     }
 
-    public void setChangeAmount(double changeAmount) {
+    public void setChangeAmount(String changeAmount) {
         this.changeAmount = changeAmount;
     }
 
-    public double getChangePercentage() {
+    public String getChangePercentage() {
         return changePercentage;
     }
 
-    public void setChangePercentage(double changePercentage) {
+    public void setChangePercentage(String changePercentage) {
         this.changePercentage = changePercentage;
     }
 
-    public JSONObject createStockObject(Context context, String ticker, String name, double lastTradePrice, boolean direction, double changeAmount, double changePercentage) {
+    @Override
+    public String toString() {
+        return "ticker: "+getTicker()+" name: "+getName()+" lastTradePrice: "+getLastTradePrice()+" direction: "+getDirection()+" changeAmount: "+getChangeAmount()+" changePercentage: "+getChangePercentage()+"\n";
+    }
+
+    public JSONObject createStockObject(Context context, String ticker, String name, String lastTradePrice, boolean direction, String changeAmount, String changePercentage) {
         JSONObject stockObj = new JSONObject();
         try {
             stockObj.put(context.getString(R.string.ticker), ticker);
