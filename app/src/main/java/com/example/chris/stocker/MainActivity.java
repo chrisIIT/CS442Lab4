@@ -1,6 +1,7 @@
 package com.example.chris.stocker;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,14 +9,20 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.os.SystemClock;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,7 +41,9 @@ import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity {
     ArrayList<Stock> stockList = new ArrayList<>();
-    //ArrayList<JSONObject> stockList = new ArrayList<>();
+    DatabaseHandler db = new DatabaseHandler(this);
+    private RVAdapter rvAdapter;
+    private RecyclerView mRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +54,13 @@ public class MainActivity extends AppCompatActivity {
 
         //set background color
         //getWindow().getDecorView().setBackgroundColor(Color.BLACK);
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.rv);
+
+        LinearLayoutManager llm = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(llm);
+        rvAdapter = new RVAdapter(this, stockList);
+        mRecyclerView.setAdapter(rvAdapter);
     }
 
     @Override
@@ -91,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
                 lastTradePrice = j.getString("l");
                 changeAmount = j.getString("c");
                 changePercentage = j.getString("cp");
-                if  (lastTradePrice.substring(0,1) == "+") {
+                if  (changeAmount.substring(0,1).equals("+")) {
                     direction = true; //true == "+"
                 } else {
                     direction = false; //false == "-"
@@ -113,8 +129,44 @@ public class MainActivity extends AppCompatActivity {
             for (Stock s : stockList) {
                 System.out.println(s.toString());
             }
+            //add stock to db
+            db.addStock(sto);
+            //notify adapter changed
+            rvAdapter.notifyDataSetChanged();
+
+            //print stocks
+            ArrayList<String[]> ASR = db.loadStocks();
+            ASR.toString();
         }
     }
+
+    public void deleteStock(final String symbol) {
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Stock")
+                .setMessage("Are you sure you wish to delete this stock?")
+                .setPositiveButton("Yes", new Dialog.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        System.out.println("Deleting Stock");
+                        db.deleteStock(symbol);
+                        System.out.println("Stock removed from db");
+                        for (Stock s : stockList ) { //loop through stocklist
+                            if (s.getTicker() == symbol) { //if symbol name is equal to ticker name
+                                stockList.remove(s); //delete the stock
+                                System.out.println("Stock removed: "+s.getTicker());
+                            }
+                        }
+                        //notify adapter changed
+                        rvAdapter.notifyDataSetChanged();
+                    }
+                })
+                .setNegativeButton("No", null)
+                .show();
+        //print stocks
+        ArrayList<String[]> ASR = db.loadStocks();
+        ASR.toString();
+    }
+
     public boolean checkDuplicateFound(JSONObject j) {
         if (stockList.contains(j)) {
             return true;
@@ -272,6 +324,47 @@ class DownloadStocks extends AsyncTask<String, Void, String> {
                 } else { //more than one stock found
                     //System.out.println("More than one stock found");
                     //System.out.println("number of stocks are "+JA.length());
+
+
+                    TextView[] tArray = new TextView[JA.length()]; //create textview array
+                    JSONObject[] k = new JSONObject[JA.length()];
+                    LinearLayout linear = new LinearLayout(activity);
+                    linear.setOrientation(LinearLayout.VERTICAL);
+                    for (int i = 0; i<JA.length(); i++) {
+                        //create textview and jsonobject for each stock
+                        k[i] = (JSONObject)JA.get(i);
+                        tArray[i] = new TextView(activity);
+                        tArray[i].setText(k[i].getString("company_symbol")+" - "+k[i].getString("company_name"));
+                        //styling
+                        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                        lp.gravity = Gravity.CENTER;
+                        lp.setMargins(0,30,0,30);
+                        tArray[i].setLayoutParams(lp);
+                        //styling
+
+                        //set each textview's onclick listener and addview
+                        linear.addView(tArray[i]);
+                        tArray[i].setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                               // activity.processNewStock(k[i].getString("company_symbol"),k[i].getString("company_name"));
+                                TextView tv = (TextView)v;
+                                System.out.println("clicked text is "+tv.getText().toString());
+                                String[] data = tv.getText().toString().split(" - ");
+                                String symbol = data[0];
+                                String company_name = data[1];
+                                System.out.println("Symbol is: "+symbol);
+                                System.out.println("Company name is: "+company_name);
+                                //TODO uncomment this for the rest
+                                activity.processNewStock(symbol, company_name);
+                            }
+                        });
+                    }
+                    new AlertDialog.Builder(activity)
+                            .setTitle("Select A Stock")
+                            .setView(linear)
+                            .setNegativeButton("Cancel", null)
+                            .show();
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
