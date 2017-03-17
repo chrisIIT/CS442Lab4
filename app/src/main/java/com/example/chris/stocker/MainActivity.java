@@ -355,8 +355,7 @@ class DownloadStocks extends AsyncTask<String, Void, String> {
                                 String company_name = data[1];
                                 System.out.println("Symbol is: "+symbol);
                                 System.out.println("Company name is: "+company_name);
-                                //TODO uncomment this for the rest
-                                activity.processNewStock(symbol, company_name);
+                                activity.processNewStock(symbol, company_name); //send stock
                             }
                         });
                     }
